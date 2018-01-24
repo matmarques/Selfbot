@@ -152,7 +152,7 @@ class Commands:
         for user in message.server.members:
             print("in loop ", user)
             try:
-                await client.send_message(user, "hey {username} saw u on a server just wondering if you wanna join King Gen. https://discord.gg/EhV4yQg".format(username=user.name))
+                await client.send_message(user, "hey {username} saw u on a server just wondering if you wanna join my server. discord.gg/example".format(username=user.name))
             except discord.errors.HTTPException:
                 pass
             await asyncio.sleep(Settings.SPAM_DELAY)
