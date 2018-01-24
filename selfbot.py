@@ -148,12 +148,14 @@ class Commands:
 
     @staticmethod
     async def invite(message, args):
+        print("in invite")
         for user in message.server.members:
-            if Utils.should_invite(user.id):
-                Items.INV_SET.add(user.id)
-                args = (message, user)
-                kwargs = dict()
-                await Items.INV_QUEUE.put((args, kwargs))
+            print("in loop ", user)
+            try:
+                await client.send_message(user, "hey {username} saw u on a server just wondering if you wanna join King Gen. https://discord.gg/EhV4yQg".format(username=user.name))
+            except discord.errors.HTTPException:
+                pass
+            await asyncio.sleep(Settings.SPAM_DELAY)
 
     @staticmethod
     async def moderate(message, args):
@@ -308,4 +310,4 @@ async def on_ready():
     print("Logged in as {} ({})".format(client.user.name, client.user.id))
     Items.INV_TASK = client.loop.create_task(worker(Items.INV_QUEUE, Utils.invite_user, 2, 60.0))
 
-# client.run("TOKEN", bot=False)
+client.run(token, bot=False)
