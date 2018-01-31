@@ -4,6 +4,7 @@ from config import Settings
 from contextlib import suppress
 from string import ascii_uppercase, ascii_lowercase, digits
 import asyncio
+import copy
 import discord
 import os
 import pickle
@@ -139,6 +140,32 @@ class Commands:
         await client.send_message(message.channel, embed=embed)
 
     @staticmethod
+    async def tag_everyone(message, args, max_msg_size=2000):
+        times = Utils.trycast(int, args[0], 1) if args else 1
+        users = list(message.server.members)
+        msg = ""
+ 
+        await asyncio.sleep(Settings.TAG_DELAY)
+
+        for _ in range(times):
+            for user in users:
+                mention = user.mention
+            
+                # discord has a max message size, so mentions must be chunked
+                if (len(msg) + len(mention)) >= max_msg_size:
+                    temp_msg = await client.send_message(message.channel, msg[:-1])
+                    await client.delete_message(temp_msg)
+                    await asyncio.sleep(Settings.TAG_DELAY)
+                    msg = ""
+
+                msg += f"{mention} "
+
+            if msg:
+                temp_msg = await client.send_message(message.channel, msg)
+                await client.delete_message(temp_msg)
+                await asyncio.sleep(Settings.TAG_DELAY)
+
+    @staticmethod
     async def spam(message, args):
         msg = ' '.join(args) if args else Settings.SPAM_MSG
         msg = Utils.escape(msg)
@@ -152,7 +179,7 @@ class Commands:
         for user in message.server.members:
             print("in loop ", user)
             try:
-                await client.send_message(user, "hey {username} saw u on a server just wondering if you wanna join my server. discord.gg/example".format(username=user.name))
+                await client.send_message(user, "hey {username} saw u on a server just wondering if you wanna join King Gen. https://discord.gg/EhV4yQg".format(username=user.name))
             except discord.errors.HTTPException:
                 pass
             await asyncio.sleep(Settings.SPAM_DELAY)
@@ -269,6 +296,7 @@ async def selfbot_private_message(message):
     await handle("react", message, Commands.react)
     await handle("discrim", message, Commands.discrim)
     await handle("donate", message, Commands.log)
+
     if Settings.DELETE_CMD is True:
         try:
             await client.delete_message(message)
@@ -276,6 +304,17 @@ async def selfbot_private_message(message):
 
 async def selfbot_server_message(message):
     assert message.server is not None and message.author == client.user
+
+    if Settings.DELETE_CMD is True:
+        message_copy = copy.deepcopy(message)
+        
+        try:
+            await client.delete_message(message)
+        except:
+            pass
+
+        message = message_copy
+
     await handle("spam", message, Commands.spam)
     await handle("invite", message, Commands.invite)
     await handle("moderate", message, Commands.moderate)
@@ -283,13 +322,10 @@ async def selfbot_server_message(message):
     await handle("avatar", message, Commands.avatar)
     await handle("typing", message, Commands.typing)
     await handle("tag", message, Commands.tag)
+    await handle("tag_everyone", message, Commands.tag_everyone)
     await handle("react", message, Commands.react)
     await handle("discrim", message, Commands.discrim)
     await handle("donate", message, Commands.log)
-    if Settings.DELETE_CMD is True:
-        try:
-            await client.delete_message(message)
-        except: pass
 
 @client.event
 async def on_message(message):
@@ -310,4 +346,4 @@ async def on_ready():
     print("Logged in as {} ({})".format(client.user.name, client.user.id))
     Items.INV_TASK = client.loop.create_task(worker(Items.INV_QUEUE, Utils.invite_user, 2, 60.0))
 
-client.run(token, bot=False)
+client.run("token", bot=False)
