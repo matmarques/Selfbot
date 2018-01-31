@@ -12,3 +12,6 @@ Sends a pre-composed message to everyone on the server from which you execute th
 
 ### purge [n]
 Purges your messages in the current channel. Works on servers and in private messages.
+
+### tag_everyone [n]
+Will specially mention every user inside the server that this command is is used inside. 
